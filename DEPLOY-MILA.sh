@@ -41,32 +41,69 @@ print_step "Installing prerequisites"
 # Install Homebrew if missing
 if ! command -v brew &> /dev/null; then
     print_step "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zshrc
-    source ~/.zshrc
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    print_ok "Homebrew installed"
+    if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zshrc
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+        source ~/.zshrc 2>/dev/null || true
+        print_ok "Homebrew installed"
+    else
+        print_err "Failed to install Homebrew"
+    fi
 else
+    eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || true
     print_ok "Homebrew already installed"
+fi
+
+# Verify Homebrew installation
+if ! command -v brew &> /dev/null; then
+    print_err "Homebrew installation failed - command not found"
 fi
 
 # Install Node.js if missing
 if ! command -v node &> /dev/null; then
     print_step "Installing Node.js..."
-    brew install node
-    print_ok "Node.js installed"
+    if brew install node; then
+        print_ok "Node.js installed"
+    else
+        print_err "Failed to install Node.js"
+    fi
+    # Refresh environment
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    source ~/.zshrc
+fi
+
+# Verify Node.js installation
+if ! command -v node &> /dev/null; then
+    print_err "Node.js installation failed - command not found"
+fi
+if ! command -v npm &> /dev/null; then
+    print_err "npm installation failed - command not found"
 fi
 NODE_VERSION=$(node --version)
-print_ok "Node.js $NODE_VERSION"
+print_ok "Node.js $NODE_VERSION verified"
 
 # Install OpenClaw if missing
 if ! command -v openclaw &> /dev/null; then
     print_step "Installing OpenClaw..."
-    npm install -g openclaw
-    print_ok "OpenClaw installed"
+    if npm install -g openclaw; then
+        print_ok "OpenClaw installation completed"
+    else
+        print_err "Failed to install OpenClaw via npm"
+    fi
+    # Refresh PATH to pick up global npm packages
+    export PATH="$(npm config get prefix)/bin:$PATH"
+    source ~/.zshrc
 fi
-OPENCLAW_VERSION=$(openclaw --version)
-print_ok "OpenClaw $OPENCLAW_VERSION"
+
+# Verify OpenClaw installation
+if ! command -v openclaw &> /dev/null; then
+    print_err "OpenClaw installation failed - command not found after installation"
+fi
+OPENCLAW_VERSION=$(openclaw --version 2>/dev/null)
+if [ -z "$OPENCLAW_VERSION" ]; then
+    print_err "OpenClaw installed but not responding to --version"
+fi
+print_ok "OpenClaw $OPENCLAW_VERSION verified"
 
 # -----------------------------------------------------------
 # Step 2: Create Directory Structure
