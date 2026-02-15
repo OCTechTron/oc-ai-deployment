@@ -37,30 +37,41 @@ echo ""
 print_step "Deploying $AI_NAME for $CLIENT_NAME"
 
 # -----------------------------------------------------------
-# Step 1: Verify Prerequisites
+# Step 1: Auto-Install Prerequisites
 # -----------------------------------------------------------
-print_step "Checking prerequisites"
+print_step "Installing prerequisites"
 
-# Check Homebrew
+# Install Homebrew if missing
 if ! command -v brew &> /dev/null; then
-    print_err "Homebrew not found. Install from https://brew.sh"
+    print_step "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zshrc
+    source ~/.zshrc
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    print_ok "Homebrew installed"
+else
+    print_ok "Homebrew already installed"
 fi
 
-# Check/Install Node.js
+# Install Node.js if missing
 if ! command -v node &> /dev/null; then
-    print_step "Installing Node.js"
+    print_step "Installing Node.js..."
     brew install node
+    print_ok "Node.js installed"
+else
+    NODE_VERSION=$(node --version)
+    print_ok "Node.js $NODE_VERSION already installed"
 fi
-NODE_VERSION=$(node --version)
-print_ok "Node.js $NODE_VERSION"
 
-# Check/Install OpenClaw
+# Install OpenClaw if missing
 if ! command -v openclaw &> /dev/null; then
-    print_step "Installing OpenClaw"
+    print_step "Installing OpenClaw..."
     npm install -g openclaw
+    print_ok "OpenClaw installed"
+else
+    OPENCLAW_VERSION=$(openclaw --version)
+    print_ok "OpenClaw $OPENCLAW_VERSION already installed"
 fi
-OPENCLAW_VERSION=$(openclaw --version)
-print_ok "OpenClaw $OPENCLAW_VERSION"
 
 # -----------------------------------------------------------
 # Step 2: Create Directory Structure
