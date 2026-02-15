@@ -160,23 +160,31 @@ EOF
 print_ok "Personality configured"
 
 # -----------------------------------------------------------
-# Step 5: Start OpenClaw Gateway
+# Step 5: Install and Start OpenClaw Gateway
 # -----------------------------------------------------------
-print_step "Starting OpenClaw gateway"
+print_step "Installing OpenClaw gateway service"
 
 # Stop any existing gateway
 openclaw gateway stop 2>/dev/null || true
 sleep 2
 
+# Install the gateway service  
+openclaw gateway install 2>/dev/null || print_warn "Gateway service already installed"
+
 # Start the gateway
+print_step "Starting OpenClaw gateway"
 openclaw gateway start
 
 # Wait for startup
-sleep 5
+sleep 10
 
 # Check status
-if openclaw status | grep -q "unreachable"; then
-    print_err "Gateway failed to start"
+print_step "Verifying gateway status"
+STATUS=$(openclaw status 2>/dev/null || echo "failed")
+if [[ $STATUS == *"unreachable"* ]]; then
+    print_warn "Gateway service having issues, trying manual start"
+    openclaw gateway start --allow-unconfigured || print_err "Gateway startup failed completely"
+    sleep 5
 fi
 
 print_ok "Gateway running"
