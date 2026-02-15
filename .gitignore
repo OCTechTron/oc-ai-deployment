@@ -1,0 +1,24 @@
+# Security - Never commit credentials
+*credentials*
+*secrets*
+*keys*
+*.env
+*.pem
+
+# Deployment scripts with hardcoded credentials  
+DEPLOY-*-WITH-CREDS.sh
+
+# Client-specific deployment files
+client-*/
+
+# OpenClaw config files
+gateway.yaml
+config.yaml
+
+# Logs
+*.log
+logs/
+
+# System files
+.DS_Store
+Thumbs.db

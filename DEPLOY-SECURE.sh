@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================================
-# DEPLOY-CLIENT.sh — Professional OC-AI Client Deployment
-# Single script deployment for any OC-AI client
+# DEPLOY-SECURE.sh — Secure OC-AI Deployment (No Hardcoded Credentials)
+# Professional deployment for any client - secure credential handling
 # ============================================================================
 
 set -e
@@ -19,7 +19,7 @@ print_err()  { echo -e "${RED}  ✗ $1${NC}"; exit 1; }
 
 echo ""
 echo "============================================"
-echo "  🤖 OC-AI PROFESSIONAL DEPLOYMENT"
+echo "  🔒 SECURE OC-AI DEPLOYMENT"
 echo "  Overclocked Technologies"
 echo "============================================"
 echo ""
@@ -28,12 +28,20 @@ echo ""
 read -p "AI Assistant Name: " AI_NAME
 read -p "Client Full Name: " CLIENT_NAME
 read -p "Client Email: " CLIENT_EMAIL
-read -p "Telegram Bot Token: " BOT_TOKEN
 read -p "Client Telegram User ID: " USER_ID
-read -p "Anthropic API Key: " ANTHROPIC_KEY
-read -p "Brave Search API Key: " BRAVE_KEY
 
 echo ""
+echo "🔑 SECURE CREDENTIAL INPUT"
+echo "================================"
+echo "⚠️  Credentials will not be stored in files"
+read -s -p "Telegram Bot Token: " BOT_TOKEN
+echo ""
+read -s -p "Anthropic API Key: " ANTHROPIC_KEY
+echo ""
+read -s -p "Brave Search API Key: " BRAVE_KEY
+echo ""
+echo ""
+
 print_step "Deploying $AI_NAME for $CLIENT_NAME"
 
 # -----------------------------------------------------------
@@ -215,26 +223,30 @@ sudo pmset -a autorestart 1
 print_ok "Never sleep mode enabled"
 
 # -----------------------------------------------------------
-# Step 7: Start OpenClaw Gateway
+# Step 7: Install and Start OpenClaw Gateway
 # -----------------------------------------------------------
-print_step "Starting OpenClaw gateway"
+print_step "Installing OpenClaw gateway service"
 
 # Stop any existing gateway
 openclaw gateway stop 2>/dev/null || true
 sleep 2
 
-# Install and start gateway service
-openclaw gateway install
+# Install the gateway service  
+openclaw gateway install 2>/dev/null || print_warn "Gateway service already installed"
+
+# Start the gateway
+print_step "Starting OpenClaw gateway"
 openclaw gateway start
 
 # Wait for startup
 sleep 10
 
 # Check status
+print_step "Verifying gateway status"
 STATUS=$(openclaw status 2>/dev/null || echo "failed")
 if [[ $STATUS == *"unreachable"* ]]; then
     print_warn "Gateway service having issues, trying manual start"
-    openclaw gateway start --allow-unconfigured
+    openclaw gateway start --allow-unconfigured || print_err "Gateway startup failed completely"
     sleep 5
 fi
 
@@ -290,6 +302,13 @@ launchctl bootstrap gui/\$UID ~/Library/LaunchAgents/ai.openclaw.gateway.plist 2
 print_ok "Auto-start configured"
 
 # -----------------------------------------------------------
+# Clear credentials from memory
+# -----------------------------------------------------------
+unset BOT_TOKEN
+unset ANTHROPIC_KEY
+unset BRAVE_KEY
+
+# -----------------------------------------------------------
 # Final Status Check
 # -----------------------------------------------------------
 echo ""
@@ -314,5 +333,6 @@ echo "  Status: openclaw status"
 echo "  Logs: openclaw logs"
 echo "  Restart: openclaw gateway restart"
 echo ""
+echo "🔒 SECURITY: Credentials cleared from memory"
 echo "✅ Professional OC-AI deployment complete!"
 echo ""

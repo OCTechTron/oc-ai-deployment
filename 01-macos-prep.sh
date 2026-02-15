@@ -45,7 +45,10 @@ if [[ -z "$AI_NAME" ]]; then
     exit 1
 fi
 
-# Save the AI name for later scripts to use
+# Create OpenClaw directory structure first
+mkdir -p ~/.openclaw/workspace/memory
+
+# Save the AI name for later scripts to use  
 echo "$AI_NAME" > ~/.openclaw/.ai-name
 COMPUTER_NAME="${AI_NAME}"
 echo ""
